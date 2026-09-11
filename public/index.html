@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>SoneYay Fashion Studio</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: var(--tg-theme-bg-color, #f4f6f8);
+      --text-color: var(--tg-theme-text-color, #222222);
+      --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+      --button-color: var(--tg-theme-button-color, #0088cc);
+      --button-text: var(--tg-theme-button-text-color, #ffffff);
+      --hint-color: var(--tg-theme-hint-color, #888888);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 16px;
+      padding-bottom: 90px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .cart-badge-btn {
+      position: relative;
+      background: var(--button-color);
+      color: var(--button-text);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background-color: #eee;
+    }
+
+    .product-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .product-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--button-color);
+      margin-bottom: 10px;
+    }
+
+    .selector-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 11px;
+      color: var(--hint-color);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .add-to-cart-btn {
+      margin-top: auto;
+      background: var(--button-color);
+      color: var(--button-text);
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .add-to-cart-btn:active {
+      opacity: 0.8;
+    }
+
+    /* Modal Styling */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      width: 100%;
+      max-height: 85vh;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .cart-item-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cart-item-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .cart-item-meta {
+      font-size: 12px;
+      color: var(--hint-color);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group input, .form-group select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .checkout-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .payment-details {
+      background: var(--bg-color);
+      border: 1px dashed var(--button-color);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .payment-details .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .payment-details .copy-btn {
+      background: var(--button-color);
+      color: var(--button-text);
+      border: none;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .payment-details .hint {
+      color: var(--hint-color);
+      font-size: 11px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--button-color);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--hint-color);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .upload-zone.dragover {
+      background: rgba(0, 136, 204, 0.08);
+      border-color: var(--button-color);
+    }
+
+    .upload-preview {
+      display: none;
+      max-width: 100%;
+      max-height: 160px;
+      border-radius: 8px;
+      margin-top: 8px;
+      object-fit: cover;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--hint-color);
+      font-size: 14px;
+      cursor: pointer;
+      align-self: flex-end;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>SoneYay Fashion Studio</h1>
+    <button class="cart-badge-btn" onclick="openCart()">
+      🛒 ဈေးဝယ်ခြင်း (<span id="cart-count">0</span>)
+    </button>
+  </header>
+
+  <div class="product-grid" id="product-grid"></div>
+
+  <!-- Shopping Cart Modal -->
+  <div class="modal" id="cart-modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeCart()">✕ ပိတ်မည်</button>
+      <h2>သင်၏ ဈေးဝယ်ခြင်း</h2>
+      
+      <div id="cart-items"></div>
+
+      <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 18px;">
+        <span>စုစုပေါင်း:</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+
+      <div class="form-group">
+        <label>ပို့ဆောင်ရမည့် လိပ်စာ</label>
+        <input type="text" id="address" placeholder="ပို့ဆောင်ရမည့် လိပ်စာ ထည့်ပါ" required />
+      </div>
+
+      <div class="form-group">
+        <label>ငွေပေးချေမှု နည်းလမ်း</label>
+        <select id="payment-method" onchange="renderPaymentDetails()">
+          <option value="Cash on Delivery (COD)">အိမ်ရောက်ငွေချေ (COD)</option>
+          <option value="KBZPay">KBZPay</option>
+          <option value="WavePay">WavePay</option>
+        </select>
+      </div>
+
+      <div id="payment-details"></div>
+
+      <button class="checkout-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Product List
+    const products = [
+      {
+        id: 1,
+        title: "လက်မဲ့ အနီရောင် ဂါဝန်",
+        price: 45.00,
+        image: "/images/red-dress.jpg",
+        colors: ["အနီရောင်"],
+        sizes: ["S", "M", "L", "XL"]
+      },
+      {
+        id: 2,
+        title: "ပေါ့ပါးသော နွေရာသီ အင်္ကျီ",
+        price: 25.00,
+        image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500",
+        colors: ["အဖြူရောင်", "အနက်ရောင်", "ခရင်မ်ရောင်"],
+        sizes: ["S", "M", "L"]
+      }
+    ];
+
+    let cart = [];
+    let walletInfo = {};
+    let proofFile = null;
+
+    async function loadPaymentInfo() {
+      try {
+        const res = await fetch('/api/payment-info');
+        const data = await res.json();
+        walletInfo = data.wallets || {};
+      } catch (err) {
+        console.error('Failed to load payment info', err);
+      }
+    }
+
+    function copyText(text) {
+      navigator.clipboard?.writeText(text).then(() => {
+        tg.HapticFeedback.notificationOccurred('success');
+        tg.showAlert('ကူးယူပြီးပါပြီ!');
+      }).catch(() => {
+        tg.showAlert('ကူးယူ၍ မရပါ၊ ကိုယ်တိုင် ရေးချရေးပေးပါ- ' + text);
+      });
+    }
+
+    function renderPaymentDetails() {
+      const method = document.getElementById('payment-method').value;
+      const container = document.getElementById('payment-details');
+      proofFile = null;
+
+      if (method !== 'KBZPay' && method !== 'WavePay') {
+        container.innerHTML = '';
+        return;
+      }
+
+      const wallet = walletInfo[method];
+      if (!wallet) {
+        container.innerHTML = `<div class="payment-details hint">ငွေပေးချေမှု အချက်အလက် မရှိသေးပါ။</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="payment-details">
+          <div class="row">
+            <span><strong>${wallet.label}</strong> — ${wallet.name}</span>
+          </div>
+          <div class="row">
+            <span>${wallet.number}</span>
+            <button type="button" class="copy-btn" onclick="copyText('${wallet.number}')">ကူးမည်</button>
+          </div>
+          <span class="hint">ငွေလွှဲပြီးပါက Screenshot ကို အောက်တွင် Upload လုပ်ပေးပါ။</span>
+          <div class="upload-zone" id="upload-zone">
+            <span id="upload-zone-text">📷 ဓာတ်ပုံ ကူးထည့်ရန် နှိပ်ပါ (သို့) ဆွဲချ ထည့်ပါ</span>
+            <img id="upload-preview" class="upload-preview" />
+          </div>
+          <input type="file" id="proof-input" accept="image/*" style="display:none" />
+        </div>
+      `;
+
+      setupUploadZone();
+    }
+
+    function setupUploadZone() {
+      const zone = document.getElementById('upload-zone');
+      const input = document.getElementById('proof-input');
+
+      zone.addEventListener('click', () => input.click());
+
+      input.addEventListener('change', () => handleProofFile(input.files[0]));
+
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('dragover');
+      });
+
+      zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleProofFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function handleProofFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      proofFile = file;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const preview = document.getElementById('upload-preview');
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        document.getElementById('upload-zone-text').textContent = 'ဓာတ်ပုံ ရွေးပြီးပါပြီ — ပြောင်းလိုပါက ထပ်နှိပ်ပါ';
+      };
+      reader.readAsDataURL(file);
+      tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = products.map(product => `
+        <div class="product-card">
+          <img src="${product.image}" alt="${product.title}" class="product-image" onerror="this.src='https://via.placeholder.com/150'">
+          <div class="product-title">${product.title}</div>
+          <div class="product-price">$${product.price.toFixed(2)}</div>
+          
+          <div class="selector-group">
+            <label>အရောင်</label>
+            <select id="color-${product.id}">
+              ${product.colors.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="selector-group">
+            <label>ဆိုဒ်</label>
+            <select id="size-${product.id}">
+              ${product.sizes.map(s => `<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>
+
+          <button class="add-to-cart-btn" onclick="addToCart(${product.id})">ဈေးဝယ်ခြင်းထဲ ထည့်မည်</button>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      const color = document.getElementById(`color-${productId}`).value;
+      const size = document.getElementById(`size-${productId}`).value;
+
+      const existingItem = cart.find(item => item.id === productId && item.color === color && item.size === size);
+
+      if (existingItem) {
+        existingItem.qty += 1;
+      } else {
+        cart.push({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          color: color,
+          size: size,
+          qty: 1
+        });
+      }
+
+      updateCartBadge();
+      tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function updateCartBadge() {
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+      document.getElementById('cart-count').innerText = count;
+    }
+
+    function openCart() {
+      if (cart.length === 0) {
+        tg.showAlert("ဈေးဝယ်ခြင်းထဲတွင် ပစ္စည်း မရှိသေးပါ!");
+        return;
+      }
+      renderCartItems();
+      document.getElementById('cart-modal').classList.add('active');
+    }
+
+    function closeCart() {
+      document.getElementById('cart-modal').classList.remove('active');
+    }
+
+    function renderCartItems() {
+      const container = document.getElementById('cart-items');
+      let total = 0;
+
+      container.innerHTML = cart.map((item, index) => {
+        const itemTotal = item.price * item.qty;
+        total += itemTotal;
+        return `
+          <div class="cart-item">
+            <div class="cart-item-details">
+              <span class="cart-item-title">${item.title}</span>
+              <span class="cart-item-meta">အရောင်: ${item.color} | ဆိုဒ်: ${item.size} x${item.qty}</span>
+            </div>
+            <div>
+              <strong>$${itemTotal.toFixed(2)}</strong>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
+    }
+
+    async function submitOrder() {
+      const address = document.getElementById('address').value.trim();
+      const paymentMethod = document.getElementById('payment-method').value;
+      const isWallet = paymentMethod === 'KBZPay' || paymentMethod === 'WavePay';
+
+      if (!address) {
+        tg.showAlert("ကျေးဇူးပြု၍ ပို့ဆောင်ရမည့် လိပ်စာ ထည့်သွင်းပေးပါ။");
+        return;
+      }
+
+      if (isWallet && !proofFile) {
+        tg.showAlert("ကျေးဇူးပြု၍ ငွေလွှဲ Screenshot ကို Upload လုပ်ပေးပါ။");
+        return;
+      }
+
+      const user = tg.initDataUnsafe?.user;
+      const userId = user ? user.id : null;
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+      const orderData = {
+        userId: userId,
+        items: cart,
+        total: total.toFixed(2),
+        paymentMethod: paymentMethod,
+        address: address
+      };
+
+      try {
+        const response = await fetch('/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          tg.showAlert("အော်ဒါ တင်၍ မရပါ၊ ကျေးဇူးပြု၍ ပြန်လည် ကြိုးစားပါ။");
+          return;
+        }
+
+        if (isWallet && proofFile) {
+          const formData = new FormData();
+          formData.append('proof', proofFile);
+          await fetch(`/api/order/${result.orderId}/proof`, {
+            method: 'POST',
+            body: formData
+          });
+        }
+
+        const msg = isWallet
+          ? "အော်ဒါ တင်ပြီးပါပြီ! ငွေလွှဲ Screenshot ကို ပို့ပြီးပါပြီ — Admin အတည်ပြုချက်ကို စောင့်ပါ။"
+          : "အော်ဒါ အောင်မြင်စွာ တင်ပြီးပါပြီ!";
+
+        tg.showAlert(msg, () => {
+          cart = [];
+          proofFile = null;
+          updateCartBadge();
+          closeCart();
+          tg.close();
+        });
+      } catch (err) {
+        tg.showAlert("အင်တာနက် ချိတ်ဆက်မှု မရှိပါ၊ ကျေးဇူးပြု၍ ပြန်စစ်ပါ။");
+      }
+    }
+
+    // Initialize
+    renderProducts();
+    loadPaymentInfo();
+  </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+Flask>=3.0
+python-dotenv>=1.0
+pyTelegramBotAPI>=4.20
+pyngrok>=7.1
